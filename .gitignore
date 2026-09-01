@@ -1,0 +1,34 @@
+# Dependencies
+node_modules/
+
+# Expo local state and generated bundles
+.expo/
+.expo-shared/
+web-build/
+dist/
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# Native build artifacts
+android/.gradle/
+android/app/build/
+ios/Pods/
+ios/build/
+*.keystore
+*.jks
+
+# Logs and diagnostics
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# Editor and OS files
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
