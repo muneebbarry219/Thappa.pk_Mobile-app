@@ -1,15 +1,32 @@
 import { useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Alert, ActivityIndicator } from "react-native";
 import { CameraView, useCameraPermissions } from "expo-camera";
+import * as Location from "expo-location";
 import { useRouter } from "expo-router";
 import { apiClient, apiErrorMessage } from "../../src/api/client";
+import { useAuth } from "../../src/auth/AuthContext";
+
+// In preview mode a scan alternates between these two canned outcomes so a
+// developer can see both the "stamp added" and "reward unlocked" screens
+// without a real QR code or backend.
+const MOCK_SCAN_OUTCOMES = [
+  { type: "success" as const, text: "Stamp added! 4 / 5" },
+  { type: "success" as const, text: "🎉 Reward unlocked! 1 Free Item\nShow code 482913 to staff." },
+];
 
 export default function ScanScreen() {
+  const { isPreview } = useAuth();
   const [permission, requestPermission] = useCameraPermissions();
   const [scanned, setScanned] = useState(false);
   const [loading, setLoading] = useState(false);
   const [resultMessage, setResultMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [previewOutcomeIndex, setPreviewOutcomeIndex] = useState(0);
   const router = useRouter();
+
+  function handleSimulateScan() {
+    setResultMessage(MOCK_SCAN_OUTCOMES[previewOutcomeIndex]);
+    setPreviewOutcomeIndex((i) => (i + 1) % MOCK_SCAN_OUTCOMES.length);
+  }
 
   // A scanned QR encodes either:
   //  - a raw signed JWT (Mode A — the counter tablet renders the QR image
@@ -33,6 +50,12 @@ export default function ScanScreen() {
   async function handleBarcodeScanned({ data }: { data: string }) {
     if (scanned || loading) return;
     setScanned(true);
+
+    if (isPreview) {
+      handleSimulateScan();
+      return;
+    }
+
     setLoading(true);
     setResultMessage(null);
 
@@ -43,16 +66,15 @@ export default function ScanScreen() {
       if (qrToken) {
         body = { qrToken };
       } else if (branchId) {
-        // Mode B requires GPS — in a full build, fetch this via expo-location
-        // before calling redeem-qr. Left as a manual prompt here to keep the
-        // scanner screen dependency-light out of the box.
-        Alert.alert(
-          "Location required",
-          "This business uses static counter QR codes. Add expo-location and pass { lat, lng } here to complete Mode B."
-        );
-        setLoading(false);
-        setScanned(false);
-        return;
+        // Mode B: static counter QR — confirm the visit with GPS.
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== "granted") {
+          setResultMessage({ type: "error", text: "Location permission is required to collect a stamp here." });
+          setLoading(false);
+          return;
+        }
+        const position = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+        body = { branchId, lat: position.coords.latitude, lng: position.coords.longitude };
       } else {
         throw new Error("Unrecognized QR code");
       }
@@ -86,13 +108,18 @@ export default function ScanScreen() {
     return <View style={styles.center}><ActivityIndicator color="#fca311" /></View>;
   }
 
-  if (!permission.granted) {
+  if (!permission.granted && !resultMessage) {
     return (
       <View style={styles.center}>
         <Text style={styles.permissionText}>Thappa needs camera access to scan stamp QR codes.</Text>
         <TouchableOpacity style={styles.button} onPress={requestPermission}>
           <Text style={styles.buttonText}>Grant Camera Access</Text>
         </TouchableOpacity>
+        {isPreview && (
+          <TouchableOpacity style={[styles.button, styles.simulateButton]} onPress={handleSimulateScan}>
+            <Text style={styles.buttonText}>🛠 Simulate a scan instead</Text>
+          </TouchableOpacity>
+        )}
       </View>
     );
   }
@@ -109,6 +136,11 @@ export default function ScanScreen() {
           <View style={styles.overlay}>
             <View style={styles.scanFrame} />
             <Text style={styles.hint}>{loading ? "Checking QR…" : "Point your camera at the stamp QR code"}</Text>
+            {isPreview && (
+              <TouchableOpacity style={[styles.button, styles.simulateButton]} onPress={handleSimulateScan}>
+                <Text style={styles.buttonText}>🛠 Simulate a scan</Text>
+              </TouchableOpacity>
+            )}
           </View>
         </>
       ) : (
@@ -135,4 +167,5 @@ const styles = StyleSheet.create({
   resultError: { fontSize: 16, fontWeight: "600", color: "#dc2626", textAlign: "center", marginBottom: 24 },
   button: { backgroundColor: "#14213d", borderRadius: 12, paddingVertical: 14, paddingHorizontal: 28 },
   buttonText: { color: "white", fontWeight: "700" },
+  simulateButton: { marginTop: 16, backgroundColor: "#fca311" },
 });

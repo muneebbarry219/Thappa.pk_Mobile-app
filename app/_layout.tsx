@@ -2,9 +2,10 @@ import { useEffect } from "react";
 import { Slot, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { AuthProvider, useAuth } from "../src/auth/AuthContext";
+import { registerForPushNotificationsAsync } from "../src/notifications/registerPushToken";
 
 function RootNavigation() {
-  const { user, loading } = useAuth();
+  const { user, loading, isPreview } = useAuth();
   const segments = useSegments();
   const router = useRouter();
 
@@ -18,6 +19,12 @@ function RootNavigation() {
       router.replace("/(tabs)/home");
     }
   }, [user, loading, segments]);
+
+  useEffect(() => {
+    if (user && !isPreview) {
+      registerForPushNotificationsAsync();
+    }
+  }, [user, isPreview]);
 
   return <Slot />;
 }

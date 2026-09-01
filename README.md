@@ -6,15 +6,21 @@ in, view stamp cards, scan the QR at checkout, and see rewards.
 ## What's implemented
 
 - **Auth**: Phone + OTP flow (`(auth)/login.tsx` → `(auth)/verify-otp.tsx`),
-  wired to the backend's `/auth/otp/send` and `/auth/otp/verify`. A "Continue
-  with Google" button is present but stubbed — see note below.
+  using real Firebase Phone Auth SMS once `EXPO_PUBLIC_FIREBASE_*` env vars
+  are set, otherwise falling back to the backend's console-logged dev OTP.
+  "Continue with Google" drives a real `expo-auth-session` OAuth flow once
+  `EXPO_PUBLIC_GOOGLE_CLIENT_ID` is set (needs a custom dev client / EAS
+  build to complete the redirect — Expo Go shows a config-needed alert).
 - **Home (`(tabs)/home.tsx`)**: grid of stamp cards ("My Cards") with a
   visual dot-progress row per card.
 - **Scan (`(tabs)/scan.tsx`)**: opens the camera, reads a QR code, and calls
   `/customer/stamps/redeem-qr`. Handles both a raw signed-JWT QR (Mode A,
   what the business's Generate-QR web page renders) and a
-  `https://app.thappa.in/scan?b=<branchId>` deep link (Mode B storefront
-  QR — GPS wiring is left as a documented next step, see the code comment).
+  `https://app.thappa.in/scan?b=<branchId>` deep link (Mode B storefront QR
+  — requests `expo-location` permission and sends real GPS coordinates).
+- **Push notifications**: registers the device's Expo push token with the
+  backend on login (`src/notifications/registerPushToken.ts`) so a reward
+  unlock triggers an instant push, even if the app is backgrounded.
 - **Rewards (`(tabs)/rewards.tsx`)**: lists stamp cards with progress; swap
   in a dedicated backend endpoint for a true "pending redemptions" list
   when you need one (noted in the file).
@@ -26,17 +32,34 @@ in, view stamp cards, scan the QR at checkout, and see rewards.
   Mode B storefront QR with the phone's default camera app still opens
   Thappa directly.
 
-## What's intentionally stubbed
+## Developer tools
 
-- **Google Sign-In** — the button shows an explainer alert. Wire it to
-  `@react-native-google-signin/google-signin`, then POST the result to
-  `/auth/google` (see backend README for what that endpoint currently
-  accepts, and the note there about verifying a real ID token in production).
-- **GPS for Mode B** — add `expo-location`, request permission, and pass
-  `{ branchId, lat, lng }` to `/customer/stamps/redeem-qr` where the scan
-  screen currently shows an explainer alert instead.
-- **Push notifications** — add `expo-notifications` to alert customers the
-  instant a reward unlocks, per the Technical Guide §12.
+- **Preview UI mode** — on the login screen (dev builds only, `__DEV__`),
+  "🛠 Preview UI (developer, no backend)" logs into a fake local session with
+  zero network calls. Every screen (`AuthContext.tsx#previewLogin`) reads from
+  static fixtures in `src/preview/mockData.ts` instead of the API, so you can
+  review the whole app's UI/design with no backend, database, or credentials
+  running at all. The Scan screen additionally gets a "🛠 Simulate a scan"
+  button to preview both the stamp-added and reward-unlocked result states
+  without a real QR code.
+
+## Optional integrations (env-gated)
+
+Set these in `.env` to activate the real versions of features that otherwise
+run in a dev-friendly fallback mode:
+
+- **`EXPO_PUBLIC_GOOGLE_CLIENT_ID`** — same OAuth Web Client ID as the
+  backend's `GOOGLE_CLIENT_ID`. Requires a custom dev client or EAS build;
+  Expo Go can't complete the redirect.
+- **`EXPO_PUBLIC_FIREBASE_API_KEY` / `_AUTH_DOMAIN` / `_PROJECT_ID` /
+  `_APP_ID`** — from your Firebase project's Web app config. Enables real SMS
+  phone auth (via `expo-firebase-recaptcha`); the backend needs matching
+  `FIREBASE_*` vars set too.
+- App icon/splash (`assets/*.png`) are placeholder brand marks — swap in
+  real designed assets before submitting to app stores.
+- Production push notifications need an EAS project id
+  (`app.config.ts` extra.eas.projectId, set up via `eas init`) — without one,
+  push registration silently no-ops and the app still works, just without push.
 
 ## Getting started
 

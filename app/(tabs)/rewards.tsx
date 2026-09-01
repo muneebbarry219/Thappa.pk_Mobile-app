@@ -2,6 +2,8 @@ import { useCallback, useState } from "react";
 import { View, Text, FlatList, StyleSheet, RefreshControl } from "react-native";
 import { useFocusEffect } from "expo-router";
 import { apiClient } from "../../src/api/client";
+import { useAuth } from "../../src/auth/AuthContext";
+import { MOCK_STAMP_CARDS } from "../../src/preview/mockData";
 
 interface StampCardWithReward {
   _id: string;
@@ -16,13 +18,18 @@ interface StampCardWithReward {
 // a GET /customer/redemptions?status=PENDING endpoint on the backend and
 // swap the fetch below to call it directly.
 export default function RewardsScreen() {
-  const [cards, setCards] = useState<StampCardWithReward[]>([]);
+  const { isPreview } = useAuth();
+  const [cards, setCards] = useState<StampCardWithReward[]>(isPreview ? MOCK_STAMP_CARDS : []);
   const [refreshing, setRefreshing] = useState(false);
 
   const load = useCallback(async () => {
+    if (isPreview) {
+      setCards(MOCK_STAMP_CARDS);
+      return;
+    }
     const { data } = await apiClient.get("/customer/stamp-cards");
     setCards(data.data);
-  }, []);
+  }, [isPreview]);
 
   useFocusEffect(
     useCallback(() => {

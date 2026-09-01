@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { View, Text, StyleSheet, FlatList, ActivityIndicator } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { apiClient } from "../../src/api/client";
+import { useAuth } from "../../src/auth/AuthContext";
+import { findMockCard } from "../../src/preview/mockData";
 import { StampRow } from "../../src/components/StampRow";
 
 interface CardDetail {
@@ -20,11 +22,19 @@ interface TransactionItem {
 
 export default function CardDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const { isPreview } = useAuth();
   const [card, setCard] = useState<CardDetail | null>(null);
   const [transactions, setTransactions] = useState<TransactionItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (isPreview) {
+      const mock = findMockCard(id);
+      setCard(mock || null);
+      setTransactions(mock?.transactions || []);
+      setLoading(false);
+      return;
+    }
     (async () => {
       try {
         const { data } = await apiClient.get(`/customer/stamp-cards/${id}`);
@@ -34,7 +44,7 @@ export default function CardDetailScreen() {
         setLoading(false);
       }
     })();
-  }, [id]);
+  }, [id, isPreview]);
 
   if (loading) {
     return (

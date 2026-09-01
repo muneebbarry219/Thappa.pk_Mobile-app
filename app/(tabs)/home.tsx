@@ -2,6 +2,8 @@ import { useCallback, useState } from "react";
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, RefreshControl } from "react-native";
 import { useFocusEffect, useRouter } from "expo-router";
 import { apiClient } from "../../src/api/client";
+import { useAuth } from "../../src/auth/AuthContext";
+import { MOCK_STAMP_CARDS } from "../../src/preview/mockData";
 import { StampRow } from "../../src/components/StampRow";
 
 interface StampCardSummary {
@@ -13,18 +15,23 @@ interface StampCardSummary {
 }
 
 export default function HomeScreen() {
-  const [cards, setCards] = useState<StampCardSummary[]>([]);
+  const { isPreview } = useAuth();
+  const [cards, setCards] = useState<StampCardSummary[]>(isPreview ? MOCK_STAMP_CARDS : []);
   const [refreshing, setRefreshing] = useState(false);
   const router = useRouter();
 
   const load = useCallback(async () => {
+    if (isPreview) {
+      setCards(MOCK_STAMP_CARDS);
+      return;
+    }
     try {
       const { data } = await apiClient.get("/customer/stamp-cards");
       setCards(data.data);
     } catch {
       // Swallow errors here; a real app would show a toast/banner.
     }
-  }, []);
+  }, [isPreview]);
 
   useFocusEffect(
     useCallback(() => {

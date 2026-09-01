@@ -1,24 +1,38 @@
 import { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from "react-native";
 import { useLocalSearchParams } from "expo-router";
+import { PhoneAuthProvider, signInWithCredential } from "firebase/auth";
 import { apiClient, apiErrorMessage } from "../../src/api/client";
 import { useAuth } from "../../src/auth/AuthContext";
+import { firebaseAuth } from "../../src/auth/firebase";
 
 export default function VerifyOtpScreen() {
-  const { phone, name } = useLocalSearchParams<{ phone: string; name?: string }>();
+  const { phone, name, verificationId } = useLocalSearchParams<{ phone: string; name?: string; verificationId?: string }>();
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
 
+  const otpLength = verificationId ? 6 : 4;
+
   async function handleVerify() {
-    if (otp.length !== 4) {
-      Alert.alert("Enter the 4-digit code");
+    if (otp.length !== otpLength) {
+      Alert.alert(`Enter the ${otpLength}-digit code`);
       return;
     }
     setLoading(true);
     try {
-      const { data } = await apiClient.post("/auth/otp/verify", { phone, otp, name });
-      await login(data.user, data.accessToken, data.refreshToken);
+      if (verificationId && firebaseAuth) {
+        // Real Firebase Phone Auth: exchange the SMS code for a Firebase
+        // credential, then hand the resulting ID token to the backend.
+        const credential = PhoneAuthProvider.credential(verificationId, otp);
+        const userCredential = await signInWithCredential(firebaseAuth, credential);
+        const idToken = await userCredential.user.getIdToken();
+        const { data } = await apiClient.post("/auth/firebase-phone", { idToken, name });
+        await login(data.user, data.accessToken, data.refreshToken);
+      } else {
+        const { data } = await apiClient.post("/auth/otp/verify", { phone, otp, name });
+        await login(data.user, data.accessToken, data.refreshToken);
+      }
       // Root layout's redirect effect will send us to (tabs)/home automatically.
     } catch (err) {
       Alert.alert("Verification failed", apiErrorMessage(err));
@@ -30,13 +44,17 @@ export default function VerifyOtpScreen() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Enter the code</Text>
-      <Text style={styles.subtitle}>We sent a 4-digit code to {phone}. (Dev mode: check the backend server console.)</Text>
+      <Text style={styles.subtitle}>
+        {verificationId
+          ? `We texted a ${otpLength}-digit code to ${phone}.`
+          : `We sent a ${otpLength}-digit code to ${phone}. (Dev mode: check the backend server console.)`}
+      </Text>
 
       <TextInput
         style={styles.otpInput}
-        placeholder="0000"
+        placeholder={"0".repeat(otpLength)}
         keyboardType="number-pad"
-        maxLength={4}
+        maxLength={otpLength}
         value={otp}
         onChangeText={setOtp}
         autoFocus
