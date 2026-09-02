@@ -11,6 +11,7 @@
     "lint": "tsc --noEmit"
   },
   "dependencies": {
+    "@expo-google-fonts/inter": "^0.4.2",
     "@react-native-async-storage/async-storage": "1.23.1",
     "axios": "^1.7.4",
     "expo": "~51.0.28",
@@ -19,6 +20,7 @@
     "expo-constants": "~16.0.2",
     "expo-device": "~6.0.2",
     "expo-firebase-recaptcha": "^2.3.1",
+    "expo-font": "~12.0.10",
     "expo-linking": "~6.3.1",
     "expo-location": "~17.0.1",
     "expo-notifications": "~0.28.19",

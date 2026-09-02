@@ -38,15 +38,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     (async () => {
-      const stored = await AsyncStorage.getItem(USER_KEY);
-      if (stored) {
-        try {
-          setUser(JSON.parse(stored));
-        } catch {
-          await AsyncStorage.removeItem(USER_KEY);
+      try {
+        const stored = await AsyncStorage.getItem(USER_KEY);
+        if (stored) {
+          try {
+            setUser(JSON.parse(stored));
+          } catch {
+            await AsyncStorage.removeItem(USER_KEY);
+          }
         }
+      } catch {
+        // Storage should never prevent a customer from reaching sign-in.
+        // The next successful login will write a fresh session.
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     })();
   }, []);
 

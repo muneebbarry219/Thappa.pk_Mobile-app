@@ -10,9 +10,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   userInterfaceStyle: "light",
   icon: "./assets/icon.png",
   splash: {
-    image: "./assets/splash.png",
+    image: "./assets/splash-genz-v2.png",
     resizeMode: "contain",
-    backgroundColor: "#14213d",
+    backgroundColor: "#0F6B38",
   },
   assetBundlePatterns: ["**/*"],
   ios: {
@@ -24,7 +24,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     package: "in.thappa.customer",
     adaptiveIcon: {
       foregroundImage: "./assets/adaptive-icon.png",
-      backgroundColor: "#14213d",
+      backgroundColor: "#0F6B38",
     },
     intentFilters: [
       {
@@ -40,6 +40,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   plugins: [
     "expo-router",
+    "expo-font",
     ["expo-camera", { cameraPermission: "Allow Thappa to use the camera to scan stamp QR codes." }],
     [
       "expo-location",

@@ -1,4 +1,6 @@
-import { View, Text, StyleSheet } from "react-native";
+import { View, StyleSheet } from "react-native";
+import { Text } from "./AppText";
+import { colors } from "../theme";
 
 export function StampRow({ current, required }: { current: number; required: number }) {
   const dots = Array.from({ length: required }, (_, i) => i < current);
@@ -15,18 +17,10 @@ export function StampRow({ current, required }: { current: number; required: num
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: "row", gap: 6, flexWrap: "wrap" },
-  dot: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 6,
-    marginBottom: 6,
-  },
-  filled: { backgroundColor: "#fca311" },
-  empty: { backgroundColor: "#e5e7eb" },
-  filledText: { color: "#14213d", fontWeight: "700" },
+  row: { flexDirection: "row", gap: 7, flexWrap: "wrap" },
+  dot: { width: 31, height: 31, borderRadius: 15.5, alignItems: "center", justifyContent: "center" },
+  filled: { backgroundColor: colors.yellow, borderWidth: 1.5, borderColor: colors.ink },
+  empty: { backgroundColor: colors.paper, borderWidth: 1.5, borderColor: colors.line },
+  filledText: { color: colors.ink, fontWeight: "900", fontSize: 15 },
   emptyText: { color: "transparent" },
 });

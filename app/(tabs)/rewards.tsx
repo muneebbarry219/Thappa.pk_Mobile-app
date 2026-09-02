@@ -1,80 +1,33 @@
 import { useCallback, useState } from "react";
-import { View, Text, FlatList, StyleSheet, RefreshControl } from "react-native";
+import { View, FlatList, StyleSheet, RefreshControl } from "react-native";
+import { Text } from "../../src/components/AppText";
 import { useFocusEffect } from "expo-router";
 import { apiClient } from "../../src/api/client";
 import { useAuth } from "../../src/auth/AuthContext";
 import { MOCK_STAMP_CARDS } from "../../src/preview/mockData";
+import { colors, radius } from "../../src/theme";
 
-interface StampCardWithReward {
-  _id: string;
-  businessId: { name: string };
-  currentStamps: number;
-  stampsRequired: number;
-}
+interface StampCardWithReward { _id: string; businessId: { name: string }; currentStamps: number; stampsRequired: number; }
 
-// NOTE: this MVP screen shows unlocked-but-not-yet-redeemed rewards by
-// reading each stamp card's most recent redemption via a per-card fetch on
-// the card detail screen. For a dedicated "all pending rewards" list, add
-// a GET /customer/redemptions?status=PENDING endpoint on the backend and
-// swap the fetch below to call it directly.
 export default function RewardsScreen() {
   const { isPreview } = useAuth();
   const [cards, setCards] = useState<StampCardWithReward[]>(isPreview ? MOCK_STAMP_CARDS : []);
   const [refreshing, setRefreshing] = useState(false);
-
   const load = useCallback(async () => {
-    if (isPreview) {
-      setCards(MOCK_STAMP_CARDS);
-      return;
-    }
-    const { data } = await apiClient.get("/customer/stamp-cards");
-    setCards(data.data);
+    if (isPreview) return setCards(MOCK_STAMP_CARDS);
+    try { const { data } = await apiClient.get("/customer/stamp-cards"); setCards(data.data); } catch { /* retain cached list */ }
   }, [isPreview]);
+  useFocusEffect(useCallback(() => { load(); }, [load]));
+  async function onRefresh() { setRefreshing(true); await load(); setRefreshing(false); }
+  const unlocked = cards.filter((card) => card.currentStamps >= card.stampsRequired);
 
-  useFocusEffect(
-    useCallback(() => {
-      load();
-    }, [load])
-  );
-
-  async function onRefresh() {
-    setRefreshing(true);
-    await load();
-    setRefreshing(false);
-  }
-
-  return (
-    <View style={styles.container}>
-      <FlatList
-        data={cards}
-        keyExtractor={(item) => item._id}
-        contentContainerStyle={{ padding: 16, gap: 10 }}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-        ListEmptyComponent={
-          <View style={styles.empty}>
-            <Text style={styles.emptyTitle}>No rewards yet</Text>
-            <Text style={styles.emptySubtitle}>Keep collecting stamps — your rewards will show up here once unlocked.</Text>
-          </View>
-        }
-        renderItem={({ item }) => (
-          <View style={styles.row}>
-            <Text style={styles.rowTitle}>{item.businessId?.name}</Text>
-            <Text style={styles.rowSubtitle}>
-              {item.currentStamps} / {item.stampsRequired} stamps
-            </Text>
-          </View>
-        )}
-      />
-    </View>
-  );
+  return <View style={styles.container}><FlatList data={unlocked} keyExtractor={(item) => item._id} contentContainerStyle={styles.content} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.forest} />} ListHeaderComponent={<View style={styles.hero}><Text style={styles.eyebrow}>THE GOOD STUFF</Text><Text style={styles.title}>Rewards,{`\n`}on your radar.</Text><Text style={styles.sub}>Fill your stamp cards and your next little win will land right here.</Text></View>} ListEmptyComponent={<View style={styles.empty}><Text style={styles.emptyMark}>✦</Text><Text style={styles.emptyTitle}>Nothing to claim — yet.</Text><Text style={styles.emptyCopy}>Your unlocked treats will wait here. Keep collecting!</Text></View>} renderItem={({ item }) => <View style={styles.reward}><View style={styles.gift}><Text style={styles.giftText}>★</Text></View><View style={{ flex: 1 }}><Text style={styles.rewardTitle}>A reward from {item.businessId?.name}</Text><Text style={styles.rewardCopy}>Your card is complete. Show this at the counter to redeem.</Text></View><View style={styles.ready}><Text style={styles.readyText}>READY</Text></View></View>} /></View>;
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f9fafb" },
-  row: { backgroundColor: "white", borderRadius: 12, padding: 14, borderWidth: 1, borderColor: "#e5e7eb" },
-  rowTitle: { fontWeight: "700", color: "#14213d" },
-  rowSubtitle: { fontSize: 12, color: "#6b7280", marginTop: 2 },
-  empty: { alignItems: "center", marginTop: 80, paddingHorizontal: 32 },
-  emptyTitle: { fontSize: 16, fontWeight: "700", color: "#374151" },
-  emptySubtitle: { fontSize: 13, color: "#9ca3af", textAlign: "center", marginTop: 6 },
+  container: { flex: 1, backgroundColor: colors.cream }, content: { padding: 16, paddingBottom: 32, gap: 12 },
+  hero: { backgroundColor: colors.yellow, borderRadius: radius.large, padding: 23 }, eyebrow: { color: colors.ink, fontSize: 10, fontWeight: "900", letterSpacing: 1.2 },
+  title: { color: colors.ink, fontSize: 29, lineHeight: 33, fontWeight: "900", letterSpacing: -0.8, marginTop: 13 }, sub: { color: colors.ink, fontSize: 13, lineHeight: 18, fontWeight: "600", marginTop: 12, maxWidth: 270 },
+  reward: { flexDirection: "row", alignItems: "center", backgroundColor: colors.paper, borderRadius: radius.card, padding: 16, borderWidth: 1, borderColor: colors.line, gap: 11 }, gift: { width: 43, height: 43, borderRadius: 15, alignItems: "center", justifyContent: "center", backgroundColor: colors.coral }, giftText: { color: colors.white, fontSize: 19 }, rewardTitle: { color: colors.ink, fontSize: 14, fontWeight: "900", paddingRight: 4 }, rewardCopy: { color: colors.muted, fontSize: 11, lineHeight: 16, marginTop: 3 }, ready: { backgroundColor: colors.mint, paddingHorizontal: 7, paddingVertical: 5, borderRadius: radius.pill }, readyText: { color: colors.forest, fontWeight: "900", fontSize: 8, letterSpacing: 0.5 },
+  empty: { alignItems: "center", paddingHorizontal: 28, paddingVertical: 38, backgroundColor: colors.paper, borderRadius: radius.card, borderWidth: 1, borderColor: colors.line }, emptyMark: { color: colors.coral, fontSize: 30 }, emptyTitle: { color: colors.ink, fontSize: 17, fontWeight: "900", marginTop: 10 }, emptyCopy: { color: colors.muted, textAlign: "center", fontSize: 13, marginTop: 6 },
 });
