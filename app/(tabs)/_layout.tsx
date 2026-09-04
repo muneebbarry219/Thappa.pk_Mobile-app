@@ -1,9 +1,10 @@
 import { Tabs } from "expo-router";
-import { Text } from "../../src/components/AppText";
+import { IconCircle } from "../../src/components/IconCircle";
 import { colors } from "../../src/theme";
 
-function TabIcon({ label, focused }: { label: string; focused?: boolean }) {
-  return <Text style={{ fontSize: 17, fontWeight: "800", color: focused ? colors.forest : colors.muted }}>{label}</Text>;
+function TabIcon({ name, focused, prominent = false }: { name: "home" | "pricetags" | "scan" | "gift" | "person"; focused?: boolean; prominent?: boolean }) {
+  const size = prominent ? 54 : 32;
+  return <IconCircle name={name} size={size} iconSize={prominent ? 25 : 17} backgroundColor={focused || prominent ? colors.yellowSoft : colors.cream} iconColor={focused || prominent ? colors.forest : colors.muted} />;
 }
 
 export default function TabsLayout() {
@@ -14,16 +15,17 @@ export default function TabsLayout() {
         headerTintColor: colors.ink,
         headerTitleStyle: { fontWeight: "800", fontSize: 18 },
         headerShadowVisible: false,
-        tabBarStyle: { backgroundColor: colors.paper, borderTopColor: colors.line, height: 68, paddingTop: 7 },
-        tabBarLabelStyle: { fontWeight: "700", fontSize: 11, paddingBottom: 5 },
+        tabBarStyle: { backgroundColor: colors.paper, borderTopWidth: 0, elevation: 0, height: 76, paddingTop: 8 },
+        tabBarLabelStyle: { fontWeight: "700", fontSize: 10, paddingBottom: 7 },
         tabBarActiveTintColor: colors.forest,
         tabBarInactiveTintColor: colors.muted,
       }}
     >
-      <Tabs.Screen name="home" options={{ title: "My stamps", tabBarIcon: ({ focused }) => <TabIcon label="●" focused={focused} /> }} />
-      <Tabs.Screen name="scan" options={{ title: "Scan", tabBarIcon: ({ focused }) => <TabIcon label="⌁" focused={focused} /> }} />
-      <Tabs.Screen name="rewards" options={{ title: "Rewards", tabBarIcon: ({ focused }) => <TabIcon label="✦" focused={focused} /> }} />
-      <Tabs.Screen name="profile" options={{ title: "Profile", tabBarIcon: ({ focused }) => <TabIcon label="◒" focused={focused} /> }} />
+      <Tabs.Screen name="home" options={{ title: "Home", headerShown: false, tabBarIcon: ({ focused }) => <TabIcon name="home" focused={focused} /> }} />
+      <Tabs.Screen name="campaigns" options={{ title: "Campaigns", tabBarIcon: ({ focused }) => <TabIcon name="pricetags" focused={focused} /> }} />
+      <Tabs.Screen name="scan" options={{ title: "Scan QR", tabBarIcon: ({ focused }) => <TabIcon name="scan" focused={focused} prominent />, tabBarIconStyle: { marginTop: -24 }, tabBarLabelStyle: { fontWeight: "700", fontSize: 10, paddingBottom: 7, marginTop: -1 } }} />
+      <Tabs.Screen name="rewards" options={{ title: "Rewards", tabBarIcon: ({ focused }) => <TabIcon name="gift" focused={focused} /> }} />
+      <Tabs.Screen name="profile" options={{ title: "Profile", tabBarIcon: ({ focused }) => <TabIcon name="person" focused={focused} /> }} />
     </Tabs>
   );
 }

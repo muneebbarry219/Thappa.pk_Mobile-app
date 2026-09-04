@@ -19,8 +19,8 @@ export function StampRow({ current, required }: { current: number; required: num
 const styles = StyleSheet.create({
   row: { flexDirection: "row", gap: 7, flexWrap: "wrap" },
   dot: { width: 31, height: 31, borderRadius: 15.5, alignItems: "center", justifyContent: "center" },
-  filled: { backgroundColor: colors.yellow, borderWidth: 1.5, borderColor: colors.ink },
-  empty: { backgroundColor: colors.paper, borderWidth: 1.5, borderColor: colors.line },
+  filled: { backgroundColor: colors.yellow },
+  empty: { backgroundColor: colors.cream },
   filledText: { color: colors.ink, fontWeight: "900", fontSize: 15 },
   emptyText: { color: "transparent" },
 });

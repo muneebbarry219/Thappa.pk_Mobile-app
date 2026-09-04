@@ -10,9 +10,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   userInterfaceStyle: "light",
   icon: "./assets/icon.png",
   splash: {
-    image: "./assets/splash-genz-v2.png",
-    resizeMode: "contain",
-    backgroundColor: "#0F6B38",
+    image: "./assets/splash screen bg.png",
+    resizeMode: "cover",
+    backgroundColor: "#035C2C",
   },
   assetBundlePatterns: ["**/*"],
   ios: {

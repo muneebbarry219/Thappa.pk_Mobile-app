@@ -40,3 +40,19 @@ export async function registerForPushNotificationsAsync(): Promise<void> {
     // still unlocks and shows in-app either way.
   }
 }
+
+/** Shows an immediate device notification after a successful in-app scan. */
+export async function notifyStampAdded(campaignName: string, stampsRemaining: number): Promise<void> {
+  try {
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: "Stamp added!",
+        body: `A stamp was added against ${campaignName}. ${stampsRemaining} more to go!`,
+        sound: "default",
+      },
+      trigger: null,
+    });
+  } catch {
+    // The scan result itself remains visible in-app if notifications are unavailable.
+  }
+}

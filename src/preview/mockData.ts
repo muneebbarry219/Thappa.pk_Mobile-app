@@ -21,11 +21,11 @@ const daysAgo = (n: number) => new Date(Date.now() - n * 24 * 60 * 60 * 1000).to
 
 export const MOCK_STAMP_CARDS: MockStampCard[] = [
   {
-    _id: "preview-card-1",
+    _id: "melbrew-iced-latte",
     currentStamps: 3,
     stampsRequired: 5,
-    businessId: { name: "Cafe Mocha", category: "CAFE" },
-    branchId: { name: "Clifton Branch", address: "Block 5, Clifton, Karachi" },
+    businessId: { name: "Melbrew Coffee", category: "CAFE" },
+    branchId: { name: "Iced Latte Club", address: "Melbrew Coffee" },
     transactions: [
       { _id: "t1", type: "EARN", createdAt: daysAgo(1) },
       { _id: "t2", type: "EARN", createdAt: daysAgo(4) },
@@ -33,11 +33,11 @@ export const MOCK_STAMP_CARDS: MockStampCard[] = [
     ],
   },
   {
-    _id: "preview-card-2",
-    currentStamps: 5,
-    stampsRequired: 5,
-    businessId: { name: "Bella's Bakery", category: "RESTAURANT" },
-    branchId: { name: "Gulberg Branch", address: "Main Boulevard, Gulberg, Lahore" },
+    _id: "foods-inn-50-off",
+    currentStamps: 7,
+    stampsRequired: 10,
+    businessId: { name: "Foods Inn", category: "RESTAURANT" },
+    branchId: { name: "10 Stamps for 50% Off", address: "Foods Inn" },
     transactions: [
       { _id: "t4", type: "EARN", createdAt: daysAgo(0) },
       { _id: "t5", type: "EARN", createdAt: daysAgo(2) },
@@ -47,11 +47,11 @@ export const MOCK_STAMP_CARDS: MockStampCard[] = [
     ],
   },
   {
-    _id: "preview-card-3",
-    currentStamps: 1,
-    stampsRequired: 8,
-    businessId: { name: "Glow Salon", category: "SALON" },
-    branchId: { name: "DHA Branch", address: "Phase 6, DHA, Karachi" },
+    _id: "habibi-special-platter",
+    currentStamps: 2,
+    stampsRequired: 5,
+    businessId: { name: "Habibi Shawarma", category: "RESTAURANT" },
+    branchId: { name: "Basic Shawarma to Special Platter", address: "Habibi Shawarma" },
     transactions: [{ _id: "t9", type: "EARN", createdAt: daysAgo(3) }],
   },
 ];
