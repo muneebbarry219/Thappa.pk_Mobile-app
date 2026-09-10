@@ -148,7 +148,7 @@ export default function ScanScreen() {
 
   return (
     <View style={styles.container}>
-      <CameraView style={StyleSheet.absoluteFillObject} barcodeScannerSettings={{ barcodeTypes: ["qr"] }} onBarcodeScanned={scanned ? undefined : handleBarcodeScanned} />
+      <CameraView style={StyleSheet.absoluteFill} barcodeScannerSettings={{ barcodeTypes: ["qr"] }} onBarcodeScanned={scanned ? undefined : handleBarcodeScanned} />
       <View style={styles.shade}>
         <View style={styles.scanTop}><Text style={styles.scanEyebrow}>THAPPA SCANNER</Text><Text style={styles.scanTitle}>Find the QR code.</Text></View>
         <View style={styles.frame}><View style={[styles.corner, styles.topLeft]} /><View style={[styles.corner, styles.topRight]} /><View style={[styles.corner, styles.bottomLeft]} /><View style={[styles.corner, styles.bottomRight]} /></View>

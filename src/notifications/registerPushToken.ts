@@ -1,20 +1,32 @@
 import { Platform } from "react-native";
-import Constants from "expo-constants";
+import Constants, { ExecutionEnvironment } from "expo-constants";
 import * as Device from "expo-device";
-import * as Notifications from "expo-notifications";
 import { apiClient } from "../api/client";
 
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-  }),
-});
+/**
+ * True when running inside the Expo Go client app. As of SDK 53, Expo Go on
+ * Android no longer supports push notifications at all — merely importing
+ * "expo-notifications" throws (its push-token event emitter initializes
+ * eagerly at module load). So we must never import that module while in
+ * Expo Go; only a real dev/standalone build can use it. See:
+ * https://docs.expo.dev/develop/development-builds/introduction/
+ */
+const isExpoGo = Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
 
-/** Registers this device for push and saves the Expo push token on the user's profile. Silently no-ops on simulators/denied permission. */
+/** Registers this device for push and saves the Expo push token on the user's profile. Silently no-ops on Expo Go/simulators/denied permission. */
 export async function registerForPushNotificationsAsync(): Promise<void> {
-  if (!Device.isDevice) return;
+  if (isExpoGo || !Device.isDevice) return;
+
+  const Notifications = await import("expo-notifications");
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowAlert: true,
+      shouldShowBanner: true,
+      shouldShowList: true,
+      shouldPlaySound: true,
+      shouldSetBadge: false,
+    }),
+  });
 
   if (Platform.OS === "android") {
     await Notifications.setNotificationChannelAsync("default", {
@@ -41,9 +53,11 @@ export async function registerForPushNotificationsAsync(): Promise<void> {
   }
 }
 
-/** Shows an immediate device notification after a successful in-app scan. */
+/** Shows an immediate device notification after a successful in-app scan. No-ops on Expo Go (see isExpoGo above). */
 export async function notifyStampAdded(campaignName: string, stampsRemaining: number): Promise<void> {
+  if (isExpoGo) return;
   try {
+    const Notifications = await import("expo-notifications");
     await Notifications.scheduleNotificationAsync({
       content: {
         title: "Stamp added!",
