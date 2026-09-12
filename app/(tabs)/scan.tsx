@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, StyleSheet, TouchableOpacity, View } from "react-native";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import * as Location from "expo-location";
@@ -6,7 +6,7 @@ import { Text } from "../../src/components/AppText";
 import { IconCircle } from "../../src/components/IconCircle";
 import { apiClient, apiErrorMessage } from "../../src/api/client";
 import { useAuth } from "../../src/auth/AuthContext";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { notifyStampAdded } from "../../src/notifications/registerPushToken";
 import { useNotifications } from "../../src/notifications/NotificationContext";
 import { useCampaigns } from "../../src/campaigns/CampaignContext";
@@ -38,10 +38,21 @@ export default function ScanScreen() {
   const { addNotification } = useNotifications();
   const { addPreviewStamp } = useCampaigns();
   const [permission, requestPermission] = useCameraPermissions();
+  const { openCamera } = useLocalSearchParams<{ openCamera?: string }>();
+  const hasRequestedHomeCamera = useRef(false);
   const [scanned, setScanned] = useState(false);
   const [loading, setLoading] = useState(false);
   const [resultMessage, setResultMessage] = useState<ResultMessage | null>(null);
   const [previewOutcomeIndex, setPreviewOutcomeIndex] = useState(0);
+
+  // The Home shortcut should take the customer straight to the native camera
+  // permission prompt. The regular Scan tab keeps its explanatory permission
+  // screen for people who navigate there directly.
+  useEffect(() => {
+    if (openCamera !== "1" || !permission || permission.granted || hasRequestedHomeCamera.current) return;
+    hasRequestedHomeCamera.current = true;
+    void requestPermission();
+  }, [openCamera, permission, requestPermission]);
 
   useEffect(() => {
     if (resultMessage?.type !== "success") return;

@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { FlatList, RefreshControl, StyleSheet, TouchableOpacity, View } from "react-native";
 import { useFocusEffect, useRouter } from "expo-router";
 import { Text } from "../../src/components/AppText";
@@ -7,33 +7,34 @@ import { apiClient } from "../../src/api/client";
 import { useAuth } from "../../src/auth/AuthContext";
 import { MOCK_STAMP_CARDS } from "../../src/preview/mockData";
 import { StampRow } from "../../src/components/StampRow";
-import { useCampaigns } from "../../src/campaigns/CampaignContext";
+import { ActiveCampaignCard, useCampaigns, withJoinedCampaigns } from "../../src/campaigns/CampaignContext";
 import { colors, radius } from "../../src/theme";
-
-interface Campaign {
-  _id: string;
-  currentStamps: number;
-  stampsRequired: number;
-  businessId: { name: string; category: string };
-  branchId: { name: string };
-}
 
 export default function CampaignsScreen() {
   const { isPreview } = useAuth();
-  const { campaigns: previewCampaigns } = useCampaigns();
+  const { campaigns: previewCampaigns, availableCampaigns, joinedCampaignIds, refreshCampaigns } = useCampaigns();
   const router = useRouter();
-  const [campaigns, setCampaigns] = useState<Campaign[]>(isPreview ? MOCK_STAMP_CARDS : []);
+  const [campaigns, setCampaigns] = useState<ActiveCampaignCard[]>(isPreview ? MOCK_STAMP_CARDS : []);
   const [refreshing, setRefreshing] = useState(false);
+  const activeCampaigns = useMemo(
+    () =>
+      withJoinedCampaigns(
+        isPreview ? previewCampaigns.filter((campaign) => campaign.currentStamps < campaign.stampsRequired) : campaigns,
+        joinedCampaignIds,
+        availableCampaigns,
+      ),
+    [availableCampaigns, campaigns, isPreview, joinedCampaignIds, previewCampaigns],
+  );
 
   const load = useCallback(async () => {
     if (isPreview) return;
     try {
-      const { data } = await apiClient.get("/customer/stamp-cards");
+      const [{ data }] = await Promise.all([apiClient.get("/customer/stamp-cards"), refreshCampaigns()]);
       setCampaigns(data.data);
     } catch {
       // Keep the prior list visible when a refresh fails.
     }
-  }, [isPreview]);
+  }, [isPreview, refreshCampaigns]);
 
   useFocusEffect(useCallback(() => { load(); }, [load]));
   async function onRefresh() { setRefreshing(true); await load(); setRefreshing(false); }
@@ -41,14 +42,14 @@ export default function CampaignsScreen() {
   return (
     <View style={styles.container}>
       <FlatList
-        data={isPreview ? previewCampaigns.filter((campaign) => campaign.currentStamps < campaign.stampsRequired) : campaigns}
+        data={activeCampaigns}
         keyExtractor={(item) => item._id}
         contentContainerStyle={styles.content}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.forest} />}
         ListHeaderComponent={<View style={styles.hero}><IconCircle name="pricetags" size={48} iconSize={22} /><Text style={styles.title}>Active campaigns</Text><Text style={styles.subtitle}>Every stamp card you are collecting is right here.</Text></View>}
-        ListEmptyComponent={<View style={styles.empty}><IconCircle name="pricetags" size={56} iconSize={25} /><Text style={styles.emptyTitle}>No active campaigns yet.</Text><Text style={styles.emptyCopy}>Scan a Thappa QR code to start collecting stamps.</Text></View>}
+        ListEmptyComponent={<View style={styles.empty}><IconCircle name="pricetags" size={56} iconSize={25} /><Text style={styles.emptyTitle}>No active campaigns yet.</Text><Text style={styles.emptyCopy}>Join a campaign or scan a Thappa QR code to start collecting stamps.</Text></View>}
         renderItem={({ item }) => (
-          <TouchableOpacity style={styles.campaign} activeOpacity={0.85} onPress={() => router.push(`/card/${item._id}`)}>
+          <TouchableOpacity style={styles.campaign} activeOpacity={0.85} onPress={() => router.push(item.campaignId ? `/campaign/${item.campaignId}` : `/card/${item._id}`)}>
             <View style={styles.campaignTop}>
               <IconCircle name="storefront" size={42} iconSize={19} />
               <View style={styles.campaignInfo}>

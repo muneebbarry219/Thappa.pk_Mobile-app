@@ -2,6 +2,8 @@
 // screen that normally hits the API reads from here instead, so a developer
 // can review the whole app's UI/design with no backend running at all.
 
+import type { Campaign } from "../campaigns/catalog";
+
 export interface MockTransaction {
   _id: string;
   type: string;
@@ -53,6 +55,38 @@ export const MOCK_STAMP_CARDS: MockStampCard[] = [
     businessId: { name: "Habibi Shawarma", category: "RESTAURANT" },
     branchId: { name: "Basic Shawarma to Special Platter", address: "Habibi Shawarma" },
     transactions: [{ _id: "t9", type: "EARN", createdAt: daysAgo(3) }],
+  },
+];
+
+// Preview-only stand-ins for admin-created campaigns. Real sessions only ever
+// show campaigns from GET /customer/campaigns.
+export const MOCK_CAMPAIGNS: Campaign[] = [
+  {
+    _id: "mock-campaign-brew-lab",
+    headline: "Buy 5 coffees, get 1 free",
+    description: "Collect a stamp with every coffee at Brew Lab and your sixth cup is on us.",
+    stampsRequired: 5,
+    rewardDescription: "1 free coffee",
+    businessId: { _id: "mock-business-brew-lab", name: "Brew Lab", category: "CAFE" },
+    createdAt: daysAgo(1),
+  },
+  {
+    _id: "mock-campaign-burger-barn",
+    headline: "Your 8th burger is on us",
+    description: "Every burger earns a stamp. Fill your card and the next one is free.",
+    stampsRequired: 8,
+    rewardDescription: "1 free burger",
+    businessId: { _id: "mock-business-burger-barn", name: "The Burger Barn", category: "RESTAURANT" },
+    createdAt: daysAgo(3),
+  },
+  {
+    _id: "mock-campaign-studio-glow",
+    headline: "Collect 6 stamps for a free add-on",
+    description: "Get a stamp with every appointment and pick any add-on treatment once your card is full.",
+    stampsRequired: 6,
+    rewardDescription: "1 free add-on treatment",
+    businessId: { _id: "mock-business-studio-glow", name: "Studio Glow", category: "SALON" },
+    createdAt: daysAgo(6),
   },
 ];
 

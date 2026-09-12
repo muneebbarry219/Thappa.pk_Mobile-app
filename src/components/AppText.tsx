@@ -11,8 +11,8 @@ function fontForWeight(weight: TextStyle["fontWeight"] | undefined) {
   return fonts.regular;
 }
 
-// A drop-in Text replacement that applies Inter to every label, title, and caption.
+// A drop-in Text replacement that applies Outfit by default and honors explicit screen font choices.
 export function Text({ style, ...props }: TextProps) {
   const flattenedStyle = StyleSheet.flatten(style);
-  return <NativeText {...props} style={[style, { fontFamily: fontForWeight(flattenedStyle?.fontWeight) }]} />;
+  return <NativeText {...props} style={[style, { fontFamily: flattenedStyle?.fontFamily || fontForWeight(flattenedStyle?.fontWeight) }]} />;
 }

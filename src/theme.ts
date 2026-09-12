@@ -19,12 +19,21 @@ export const colors = {
 };
 
 export const fonts = {
-  regular: "Inter_400Regular",
-  medium: "Inter_500Medium",
-  semibold: "Inter_600SemiBold",
-  bold: "Inter_700Bold",
-  extraBold: "Inter_800ExtraBold",
-  black: "Inter_900Black",
+  regular: "Outfit_400Regular",
+  medium: "Outfit_500Medium",
+  semibold: "Outfit_600SemiBold",
+  bold: "Outfit_700Bold",
+  extraBold: "Outfit_800ExtraBold",
+  black: "Outfit_900Black",
+};
+
+export const outfitFonts = {
+  regular: "Outfit_400Regular",
+  medium: "Outfit_500Medium",
+  semibold: "Outfit_600SemiBold",
+  bold: "Outfit_700Bold",
+  extraBold: "Outfit_800ExtraBold",
+  black: "Outfit_900Black",
 };
 
 export const radius = {
