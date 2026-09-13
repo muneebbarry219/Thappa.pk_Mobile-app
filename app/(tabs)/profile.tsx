@@ -1,11 +1,13 @@
-import { View, TouchableOpacity, StyleSheet, Alert } from "react-native";
+import { View, TouchableOpacity, StyleSheet } from "react-native";
 import { Text } from "../../src/components/AppText";
 import { IconCircle } from "../../src/components/IconCircle";
 import { useAuth } from "../../src/auth/AuthContext";
 import { colors, radius } from "../../src/theme";
+import { useAlertPrompt } from "../../src/components/PromptProvider";
 
 export default function ProfileScreen() {
   const { user, logout } = useAuth();
+  const Alert = useAlertPrompt();
   const initial = user?.name?.charAt(0)?.toUpperCase() || "?";
 
   return (

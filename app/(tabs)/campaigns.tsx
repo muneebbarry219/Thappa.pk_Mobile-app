@@ -49,7 +49,7 @@ export default function CampaignsScreen() {
         ListHeaderComponent={<View style={styles.hero}><IconCircle name="pricetags" size={48} iconSize={22} /><Text style={styles.title}>Active campaigns</Text><Text style={styles.subtitle}>Every stamp card you are collecting is right here.</Text></View>}
         ListEmptyComponent={<View style={styles.empty}><IconCircle name="pricetags" size={56} iconSize={25} /><Text style={styles.emptyTitle}>No active campaigns yet.</Text><Text style={styles.emptyCopy}>Join a campaign or scan a Thappa QR code to start collecting stamps.</Text></View>}
         renderItem={({ item }) => (
-          <TouchableOpacity style={styles.campaign} activeOpacity={0.85} onPress={() => router.push(item.campaignId ? `/campaign/${item.campaignId}` : `/card/${item._id}`)}>
+          <TouchableOpacity style={styles.campaign} activeOpacity={0.85} onPress={() => router.push(item.pendingCampaignId ? `/campaign/${item.pendingCampaignId}` : `/card/${item._id}`)}>
             <View style={styles.campaignTop}>
               <IconCircle name="storefront" size={42} iconSize={19} />
               <View style={styles.campaignInfo}>

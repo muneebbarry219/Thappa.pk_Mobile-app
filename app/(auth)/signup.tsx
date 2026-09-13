@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Alert, Image, ImageBackground, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
+import { Image, ImageBackground, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
 import { useRouter } from "expo-router";
 import { Text } from "../../src/components/AppText";
 import { AuthTextInput } from "../../src/components/AuthTextInput";
@@ -8,6 +8,7 @@ import { apiClient, apiErrorMessage } from "../../src/api/client";
 import { useAuth } from "../../src/auth/AuthContext";
 import { toE164Phone } from "../../src/utils/phone";
 import { colors, fonts, radius } from "../../src/theme";
+import { useAlertPrompt } from "../../src/components/PromptProvider";
 
 export default function SignUpScreen() {
   const [name, setName] = useState("");
@@ -17,6 +18,7 @@ export default function SignUpScreen() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const { login } = useAuth();
+  const Alert = useAlertPrompt();
 
   async function handleSignUp() {
     const normalizedEmail = email.trim().toLowerCase();
@@ -39,8 +41,7 @@ export default function SignUpScreen() {
       if (data.user && data.accessToken && data.refreshToken) {
         await login(data.user, data.accessToken, data.refreshToken);
       } else {
-        Alert.alert("Account created", "Your account has been created. Please sign in to continue.");
-        router.replace("/(auth)/login");
+        Alert.alert("Account created", "Your account has been created. Please sign in to continue.", [{ text: "Sign in", onPress: () => router.replace("/(auth)/login") }]);
       }
     } catch (err) {
       Alert.alert("Couldn’t create your account", apiErrorMessage(err));

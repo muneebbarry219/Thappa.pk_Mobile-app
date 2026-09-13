@@ -68,6 +68,7 @@ export const MOCK_CAMPAIGNS: Campaign[] = [
     stampsRequired: 5,
     rewardDescription: "1 free coffee",
     businessId: { _id: "mock-business-brew-lab", name: "Brew Lab", category: "CAFE" },
+    expiresAt: daysAgo(-30),
     createdAt: daysAgo(1),
   },
   {
@@ -77,6 +78,7 @@ export const MOCK_CAMPAIGNS: Campaign[] = [
     stampsRequired: 8,
     rewardDescription: "1 free burger",
     businessId: { _id: "mock-business-burger-barn", name: "The Burger Barn", category: "RESTAURANT" },
+    expiresAt: daysAgo(-14),
     createdAt: daysAgo(3),
   },
   {
@@ -86,6 +88,7 @@ export const MOCK_CAMPAIGNS: Campaign[] = [
     stampsRequired: 6,
     rewardDescription: "1 free add-on treatment",
     businessId: { _id: "mock-business-studio-glow", name: "Studio Glow", category: "SALON" },
+    expiresAt: daysAgo(-60),
     createdAt: daysAgo(6),
   },
 ];

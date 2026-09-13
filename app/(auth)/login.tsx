@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Alert, Image, ImageBackground, KeyboardAvoidingView, Platform, StyleSheet, TouchableOpacity, View } from "react-native";
+import { Image, ImageBackground, KeyboardAvoidingView, Platform, StyleSheet, TouchableOpacity, View } from "react-native";
 import { useRouter } from "expo-router";
 import { Text } from "../../src/components/AppText";
 import { AuthTextInput } from "../../src/components/AuthTextInput";
@@ -7,6 +7,7 @@ import { GoogleSignInButton } from "../../src/components/GoogleSignInButton";
 import { apiClient, apiErrorMessage } from "../../src/api/client";
 import { useAuth } from "../../src/auth/AuthContext";
 import { colors, fonts, radius } from "../../src/theme";
+import { useAlertPrompt } from "../../src/components/PromptProvider";
 
 export default function LoginScreen() {
   const [username, setUsername] = useState("");
@@ -15,6 +16,7 @@ export default function LoginScreen() {
   const [accountNotFound, setAccountNotFound] = useState(false);
   const router = useRouter();
   const { login, previewLogin } = useAuth();
+  const Alert = useAlertPrompt();
 
   async function handleLogin() {
     const normalizedUsername = username.trim().toLowerCase();

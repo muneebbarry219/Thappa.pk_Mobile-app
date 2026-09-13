@@ -5,7 +5,7 @@ import { useFocusEffect, useRouter } from "expo-router";
 import { Text } from "../src/components/AppText";
 import { IconCircle } from "../src/components/IconCircle";
 import { useCampaigns } from "../src/campaigns/CampaignContext";
-import { campaignIcon, formatCategory } from "../src/campaigns/catalog";
+import { campaignIcon, formatCategory, formatExpiry, isCampaignLive } from "../src/campaigns/catalog";
 import { colors, radius } from "../src/theme";
 
 export default function DiscoverCampaignsScreen() {
@@ -16,7 +16,7 @@ export default function DiscoverCampaignsScreen() {
   useFocusEffect(useCallback(() => { refreshCampaigns(); }, [refreshCampaigns]));
 
   const unjoinedCampaigns = useMemo(
-    () => availableCampaigns.filter((campaign) => !joinedCampaignIds.includes(campaign._id)),
+    () => availableCampaigns.filter((campaign) => !joinedCampaignIds.includes(campaign._id) && isCampaignLive(campaign)),
     [availableCampaigns, joinedCampaignIds],
   );
 
@@ -67,6 +67,7 @@ export default function DiscoverCampaignsScreen() {
               <Text style={styles.business}>{item.businessId.name}</Text>
               <Text style={styles.category}>{formatCategory(item.businessId.category)}</Text>
               <Text style={styles.offer}>{item.headline}</Text>
+              <Text style={styles.expiry}>Ends {formatExpiry(item.expiresAt)}</Text>
             </View>
             <View style={styles.stampGoal}><Text style={styles.stampGoalNumber}>{item.stampsRequired}</Text><Text style={styles.stampGoalLabel}>stamps</Text></View>
           </TouchableOpacity>
@@ -92,6 +93,7 @@ const styles = StyleSheet.create({
   business: { color: colors.ink, fontSize: 15, fontWeight: "900" },
   category: { color: colors.forest, fontSize: 10, fontWeight: "900", letterSpacing: 0.7, marginTop: 2, textTransform: "uppercase" },
   offer: { color: colors.muted, fontSize: 11, lineHeight: 15, marginTop: 4 },
+  expiry: { color: colors.forest, fontSize: 10, fontWeight: "800", marginTop: 4 },
   stampGoal: { alignItems: "center", backgroundColor: colors.cream, borderRadius: radius.small, paddingHorizontal: 9, paddingVertical: 7, marginLeft: 8 },
   stampGoalNumber: { color: colors.forest, fontSize: 16, fontWeight: "900", lineHeight: 18 },
   stampGoalLabel: { color: colors.muted, fontSize: 8, fontWeight: "800" },

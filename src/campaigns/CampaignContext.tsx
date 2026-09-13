@@ -1,7 +1,7 @@
 import { createContext, ReactNode, useCallback, useContext, useEffect, useState } from "react";
 import { apiClient } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
-import { Campaign } from "./catalog";
+import { Campaign, isCampaignLive } from "./catalog";
 import { MockStampCard, MOCK_CAMPAIGNS, MOCK_STAMP_CARDS } from "../preview/mockData";
 
 const CAFE_IDS: Record<string, string> = {
@@ -17,10 +17,12 @@ export interface ActiveCampaignCard {
   stampsRequired: number;
   businessId: { _id?: string; name: string; category: string };
   branchId: { name: string; address?: string };
-  /** Set when the customer tapped "Join" on a campaign from this business. */
+  /** The campaign a stamp card belongs to (populated by the server); absent on older branch-wide cards. */
+  campaignId?: { _id: string; headline?: string } | string | null;
+  /** Set when the customer tapped "Join" on this card's campaign. */
   joined?: boolean;
   /** Set for a joined campaign that has no stamp card yet (no stamps collected). */
-  campaignId?: string;
+  pendingCampaignId?: string;
 }
 
 interface StampResult {
@@ -49,6 +51,15 @@ function sameBusiness(a: { _id?: string; name: string }, b: { _id?: string; name
   return a.name.toLowerCase() === b.name.toLowerCase();
 }
 
+/** Campaign stamp cards match by campaign; older branch-wide cards match by business. */
+function cardBelongsToCampaign(card: ActiveCampaignCard, campaign: Campaign) {
+  if (card.campaignId) {
+    const id = typeof card.campaignId === "string" ? card.campaignId : card.campaignId._id;
+    return id === campaign._id;
+  }
+  return sameBusiness(campaign.businessId, card.businessId);
+}
+
 /**
  * Merges joined campaigns into a list of stamp cards: cards for a joined
  * campaign's business are flagged `joined`, and joined campaigns with no card
@@ -64,10 +75,10 @@ export function withJoinedCampaigns(
     .filter((campaign): campaign is Campaign => !!campaign);
 
   const markedCards = cards.map((card) =>
-    joined.some((campaign) => sameBusiness(campaign.businessId, card.businessId)) ? { ...card, joined: true } : card
+    joined.some((campaign) => cardBelongsToCampaign(card, campaign)) ? { ...card, joined: true } : card
   );
   const notStarted = joined
-    .filter((campaign) => !cards.some((card) => sameBusiness(campaign.businessId, card.businessId)))
+    .filter((campaign) => !cards.some((card) => cardBelongsToCampaign(card, campaign)))
     .reverse()
     .map<ActiveCampaignCard>((campaign) => ({
       _id: `joined-${campaign._id}`,
@@ -76,7 +87,7 @@ export function withJoinedCampaigns(
       businessId: campaign.businessId,
       branchId: { name: campaign.headline },
       joined: true,
-      campaignId: campaign._id,
+      pendingCampaignId: campaign._id,
     }));
 
   return [...notStarted, ...markedCards];
@@ -97,7 +108,8 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
         apiClient.get("/customer/campaigns"),
         apiClient.get("/customer/campaigns/joined"),
       ]);
-      setAvailableCampaigns(campaignsRes.data.data);
+      // The server already hides expired campaigns; re-check against this device's clock too.
+      setAvailableCampaigns((campaignsRes.data.data as Campaign[]).filter((campaign) => isCampaignLive(campaign)));
       setJoinedCampaignIds((joinedRes.data.data as { campaignId: string }[]).map((item) => item.campaignId));
     } catch {
       // Keep the last known lists if a refresh fails.
@@ -112,7 +124,7 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
       setJoinedCampaignIds([]);
       setCampaignsLoaded(false);
     } else if (isPreview) {
-      setAvailableCampaigns(MOCK_CAMPAIGNS);
+      setAvailableCampaigns(MOCK_CAMPAIGNS.filter((campaign) => isCampaignLive(campaign)));
       setJoinedCampaignIds([]);
       setCampaignsLoaded(true);
     } else {

@@ -111,7 +111,7 @@ export default function HomeScreen() {
             {activeCampaigns.length ? (
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.activeRail}>
                 {activeCampaigns.map((campaign) => (
-                  <TouchableOpacity key={campaign._id} style={styles.activeCampaign} activeOpacity={0.85} onPress={() => router.push(campaign.campaignId ? `/campaign/${campaign.campaignId}` : `/card/${campaign._id}`)}>
+                  <TouchableOpacity key={campaign._id} style={styles.activeCampaign} activeOpacity={0.85} onPress={() => router.push(campaign.pendingCampaignId ? `/campaign/${campaign.pendingCampaignId}` : `/card/${campaign._id}`)}>
                     <IconCircle name="storefront" size={38} iconSize={18} />
                     <Text style={styles.activeBusiness} numberOfLines={1}>{campaign.businessId.name}</Text>
                     <Text style={styles.activeProgress}>{campaign.currentStamps}/{campaign.stampsRequired} stamps</Text>

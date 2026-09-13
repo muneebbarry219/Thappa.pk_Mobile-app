@@ -14,12 +14,14 @@ import { colors, radius } from "../../src/theme";
 
 type ResultMessage = { type: "success" | "error"; text: string };
 
-function parseScannedValue(raw: string): { qrToken?: string; branchId?: string; cafeId?: string; campaignId?: string; userId?: string } {
+function parseScannedValue(raw: string): { qrToken?: string; stampToken?: string; branchId?: string; cafeId?: string; campaignId?: string; userId?: string } {
   const normalized = raw.replaceAll("&amp;", "&");
   if (normalized.startsWith("http://") || normalized.startsWith("https://") || normalized.startsWith("thappa://")) {
     try {
       const url = new URL(normalized.replace("thappa://", "https://placeholder/"));
       return {
+        // Campaign stamp QR from the business portal: thappa://stamp?campaign=…&cafe=…&t=<token>
+        stampToken: url.searchParams.get("t") || undefined,
         branchId: url.searchParams.get("b") || undefined,
         cafeId: url.searchParams.get("cafeId") || undefined,
         campaignId: url.searchParams.get("campaignId") || undefined,
@@ -88,7 +90,14 @@ export default function ScanScreen() {
     setLoading(true);
     setResultMessage(null);
     try {
-      const { qrToken, branchId, cafeId, campaignId, userId } = parseScannedValue(data);
+      const { qrToken, stampToken, branchId, cafeId, campaignId, userId } = parseScannedValue(data);
+
+      if (stampToken) {
+        // Same flow as scanning the code with the phone camera.
+        setScanned(false);
+        router.push({ pathname: "/stamp", params: { t: stampToken } });
+        return;
+      }
 
       if (isPreview) {
         if (!cafeId || !campaignId || !userId || userId !== user?.id) {

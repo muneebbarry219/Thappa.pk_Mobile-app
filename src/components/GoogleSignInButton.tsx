@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { Alert, StyleSheet, TouchableOpacity, View } from "react-native";
+import { StyleSheet, TouchableOpacity, View } from "react-native";
 import Constants, { ExecutionEnvironment } from "expo-constants";
 import { AntDesign } from "@expo/vector-icons";
 import { Text } from "./AppText";
 import { apiClient, apiErrorMessage } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
 import { colors, radius } from "../theme";
+import { useAlertPrompt } from "./PromptProvider";
 
 type GoogleSigninModule = typeof import("@react-native-google-signin/google-signin");
 
@@ -32,6 +33,7 @@ function loadGoogleSignin(): GoogleSigninModule | null {
 export function GoogleSignInButton({ disabled }: { disabled?: boolean }) {
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
+  const Alert = useAlertPrompt();
 
   async function handlePress() {
     const google = loadGoogleSignin();

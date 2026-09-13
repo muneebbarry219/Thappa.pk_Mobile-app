@@ -8,7 +8,18 @@ export interface Campaign {
   stampsRequired: number;
   rewardDescription: string;
   businessId: { _id: string; name: string; category: string; logoUrl?: string };
+  /** ISO timestamp; after this the campaign is removed from the app. */
+  expiresAt: string;
   createdAt: string;
+}
+
+export function isCampaignLive(campaign: Pick<Campaign, "expiresAt">, now = Date.now()): boolean {
+  return new Date(campaign.expiresAt).getTime() > now;
+}
+
+/** e.g. "12 Oct 2026" */
+export function formatExpiry(expiresAt: string): string {
+  return new Date(expiresAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
 }
 
 type IconName = keyof typeof Ionicons.glyphMap;
