@@ -96,3 +96,27 @@ export const MOCK_CAMPAIGNS: Campaign[] = [
 export function findMockCard(id: string): MockStampCard | undefined {
   return MOCK_STAMP_CARDS.find((c) => c._id === id);
 }
+
+export interface MockRedemption {
+  _id: string;
+  redemptionCode: string;
+  status: "PENDING" | "REDEEMED" | "EXPIRED";
+  rewardDescription: string;
+  businessId: { name: string };
+  stampCardId?: { campaignId?: { headline?: string } };
+  createdAt: string;
+}
+
+// A reward the customer has already unlocked and hasn't shown to staff yet —
+// exercises the "show this code at the counter" screen in Preview UI mode.
+export const MOCK_REDEMPTIONS: MockRedemption[] = [
+  {
+    _id: "mock-redemption-1",
+    redemptionCode: "482913",
+    status: "PENDING",
+    rewardDescription: "1 Free Iced Latte",
+    businessId: { name: "Melbrew Coffee" },
+    stampCardId: { campaignId: { headline: "Weekend Latte Special" } },
+    createdAt: daysAgo(0),
+  },
+];

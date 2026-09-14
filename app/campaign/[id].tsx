@@ -30,8 +30,12 @@ export default function CampaignDetailScreen() {
   const campaignBusiness = campaign.businessId.name;
   const joined = isJoined(campaignId);
 
+  function handleScan() {
+    router.push({ pathname: "/(tabs)/scan", params: { openCamera: "1" } });
+  }
+
   async function handleJoin() {
-    if (joined) return router.push("/(tabs)/campaigns");
+    if (joined) return handleScan();
 
     setJoining(true);
     try {
@@ -78,15 +82,25 @@ export default function CampaignDetailScreen() {
         {qr && !joined && <Text style={styles.qrHint}>Join this campaign to collect the stamp from the code you just scanned.</Text>}
         <TouchableOpacity
           accessibilityRole="button"
-          accessibilityLabel={joined ? "View active campaigns" : `Join ${campaignBusiness} campaign`}
+          accessibilityLabel={joined ? "Scan QR to collect a stamp" : `Join ${campaignBusiness} campaign`}
           style={[styles.joinButton, joined && styles.joinedButton]}
           onPress={handleJoin}
           disabled={joining}
         >
           <Text style={[styles.joinButtonText, joined && styles.joinedButtonText]}>
-            {joined ? "Joined · View active campaigns" : joining ? "Joining..." : qr ? "Join & collect stamp" : "Join campaign"}
+            {joined ? "Scan QR to collect a stamp" : joining ? "Joining..." : qr ? "Join & collect stamp" : "Join campaign"}
           </Text>
         </TouchableOpacity>
+        {joined && (
+          <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel="View active campaigns"
+            style={styles.secondaryButton}
+            onPress={() => router.push("/(tabs)/campaigns")}
+          >
+            <Text style={styles.secondaryButtonText}>View active campaigns</Text>
+          </TouchableOpacity>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -112,6 +126,8 @@ const styles = StyleSheet.create({
   joinButtonText: { color: colors.white, fontSize: 15, fontWeight: "900" },
   joinedButton: { backgroundColor: colors.yellow },
   joinedButtonText: { color: colors.ink },
+  secondaryButton: { alignItems: "center", justifyContent: "center", paddingVertical: 13, marginTop: 4 },
+  secondaryButtonText: { color: colors.forest, fontSize: 13, fontWeight: "800" },
   qrHint: { color: colors.forest, fontSize: 13, lineHeight: 19, fontWeight: "800", textAlign: "center", marginBottom: 12 },
   notFound: { flex: 1, alignItems: "center", justifyContent: "center", padding: 28, backgroundColor: colors.cream },
   notFoundText: { color: colors.ink, fontSize: 18, fontWeight: "900", textAlign: "center" },

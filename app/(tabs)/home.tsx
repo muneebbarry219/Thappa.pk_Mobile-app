@@ -82,15 +82,15 @@ export default function HomeScreen() {
 
               <View style={styles.heroFooter}>
                 <View style={styles.statGroup}>
-                  <View>
+                  <TouchableOpacity accessibilityRole="button" accessibilityLabel="View your stamps" onPress={() => router.push("/(tabs)/campaigns")}>
                     <Text style={styles.total}>{totalStamps}</Text>
                     <Text style={styles.totalLabel}>stamps done</Text>
-                  </View>
+                  </TouchableOpacity>
                   <View style={styles.statDivider} />
-                  <View>
+                  <TouchableOpacity accessibilityRole="button" accessibilityLabel="View active campaigns" onPress={() => router.push("/(tabs)/campaigns")}>
                     <Text style={styles.total}>{activeCampaigns.length}</Text>
                     <Text style={styles.totalLabel}>active campaigns</Text>
-                  </View>
+                  </TouchableOpacity>
                 </View>
               </View>
               <TouchableOpacity
