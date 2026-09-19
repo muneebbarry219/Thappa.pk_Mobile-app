@@ -10,11 +10,23 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { notifyStampAdded } from "../../src/notifications/registerPushToken";
 import { useNotifications } from "../../src/notifications/NotificationContext";
 import { useCampaigns } from "../../src/campaigns/CampaignContext";
+import { useAlertPrompt } from "../../src/components/PromptProvider";
 import { colors, radius } from "../../src/theme";
 
 type ResultMessage = { type: "success" | "error"; text: string };
 
-function parseScannedValue(raw: string): { qrToken?: string; stampToken?: string; branchId?: string; cafeId?: string; campaignId?: string; userId?: string } {
+function parseScannedValue(raw: string): {
+  qrToken?: string;
+  stampToken?: string;
+  branchId?: string;
+  cafeId?: string;
+  campaignId?: string;
+  userId?: string;
+  /** The campaign/business this QR is actually for — unsigned, read client-side only to
+   * warn on a mismatch before stamping; the server never trusts these, only the signed `t`. */
+  qrCampaignId?: string;
+  qrBusinessId?: string;
+} {
   const normalized = raw.replaceAll("&amp;", "&");
   if (normalized.startsWith("http://") || normalized.startsWith("https://") || normalized.startsWith("thappa://")) {
     try {
@@ -23,6 +35,8 @@ function parseScannedValue(raw: string): { qrToken?: string; stampToken?: string
         // Campaign stamp QR from the business portal: thappa://stamp?campaign=…&cafe=…&t=<token>
         stampToken: url.searchParams.get("t") || undefined,
         branchId: url.searchParams.get("b") || undefined,
+        qrCampaignId: url.searchParams.get("campaign") || undefined,
+        qrBusinessId: url.searchParams.get("cafe") || undefined,
         cafeId: url.searchParams.get("cafeId") || undefined,
         campaignId: url.searchParams.get("campaignId") || undefined,
         userId: url.searchParams.get("userId") || undefined,
@@ -38,9 +52,13 @@ export default function ScanScreen() {
   const { isPreview, user } = useAuth();
   const router = useRouter();
   const { addNotification } = useNotifications();
-  const { addPreviewStamp } = useCampaigns();
+  const { addPreviewStamp, availableCampaigns } = useCampaigns();
+  const Alert = useAlertPrompt();
   const [permission, requestPermission] = useCameraPermissions();
-  const { openCamera } = useLocalSearchParams<{ openCamera?: string }>();
+  // Set when the scanner was opened from a specific campaign's page (its "Scan QR to
+  // collect a stamp" button) — lets us warn if the scanned QR turns out to be for a
+  // different campaign, instead of silently stamping whatever the QR says.
+  const { openCamera, expectedCampaignId } = useLocalSearchParams<{ openCamera?: string; expectedCampaignId?: string }>();
   const hasRequestedHomeCamera = useRef(false);
   const [scanned, setScanned] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -90,12 +108,34 @@ export default function ScanScreen() {
     setLoading(true);
     setResultMessage(null);
     try {
-      const { qrToken, stampToken, branchId, cafeId, campaignId, userId } = parseScannedValue(data);
+      const { qrToken, stampToken, branchId, cafeId, campaignId, userId, qrCampaignId } = parseScannedValue(data);
 
       if (stampToken) {
+        const goToStamp = () => {
+          setScanned(false);
+          router.push({ pathname: "/stamp", params: { t: stampToken } });
+        };
+
+        // Opened from a specific campaign's page expecting a stamp for THAT campaign,
+        // but this QR is actually for a different one — confirm before adding it.
+        if (expectedCampaignId && qrCampaignId && qrCampaignId !== expectedCampaignId) {
+          const scannedCampaign = availableCampaigns.find((c) => c._id === qrCampaignId);
+          const expectedCampaign = availableCampaigns.find((c) => c._id === expectedCampaignId);
+          Alert.alert(
+            "This QR is for a different campaign",
+            `This code gives a stamp for “${scannedCampaign?.headline ?? "a different campaign"}”${
+              scannedCampaign ? ` at ${scannedCampaign.businessId.name}` : ""
+            }, not “${expectedCampaign?.headline ?? "the campaign you opened the scanner from"}”. Add this stamp anyway?`,
+            [
+              { text: "Cancel", style: "cancel", onPress: () => setScanned(false) },
+              { text: "Add stamp anyway", onPress: goToStamp },
+            ],
+          );
+          return;
+        }
+
         // Same flow as scanning the code with the phone camera.
-        setScanned(false);
-        router.push({ pathname: "/stamp", params: { t: stampToken } });
+        goToStamp();
         return;
       }
 

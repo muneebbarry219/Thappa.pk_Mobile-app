@@ -31,7 +31,7 @@ export default function CampaignDetailScreen() {
   const joined = isJoined(campaignId);
 
   function handleScan() {
-    router.push({ pathname: "/(tabs)/scan", params: { openCamera: "1" } });
+    router.push({ pathname: "/(tabs)/scan", params: { openCamera: "1", expectedCampaignId: campaignId } });
   }
 
   async function handleJoin() {
