@@ -39,3 +39,27 @@ export function campaignIcon(category?: string): IconName {
 export function formatCategory(category?: string): string {
   return category ? category.charAt(0).toUpperCase() + category.slice(1).toLowerCase() : "";
 }
+
+/** One row per business in the "Restaurants" discovery list, derived from live campaigns. */
+export interface BusinessSummary {
+  _id: string;
+  name: string;
+  category: string;
+  logoUrl?: string;
+  campaignCount: number;
+}
+
+/** Groups a flat campaign list into unique businesses, sorted alphabetically. */
+export function groupCampaignsByBusiness(campaigns: Campaign[]): BusinessSummary[] {
+  const byId = new Map<string, BusinessSummary>();
+  for (const campaign of campaigns) {
+    const business = campaign.businessId;
+    const existing = byId.get(business._id);
+    if (existing) {
+      existing.campaignCount += 1;
+    } else {
+      byId.set(business._id, { _id: business._id, name: business.name, category: business.category, logoUrl: business.logoUrl, campaignCount: 1 });
+    }
+  }
+  return Array.from(byId.values()).sort((a, b) => a.name.localeCompare(b.name));
+}

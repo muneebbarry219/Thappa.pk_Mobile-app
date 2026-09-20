@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from "react";
-import { View, FlatList, ScrollView, TouchableOpacity, StyleSheet, RefreshControl, ImageBackground } from "react-native";
+import { View, ScrollView, TouchableOpacity, StyleSheet, RefreshControl, ImageBackground } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Text } from "../../src/components/AppText";
@@ -9,7 +9,7 @@ import { useAuth } from "../../src/auth/AuthContext";
 import { MOCK_STAMP_CARDS } from "../../src/preview/mockData";
 import { IconCircle } from "../../src/components/IconCircle";
 import { ActiveCampaignCard, useCampaigns, withJoinedCampaigns } from "../../src/campaigns/CampaignContext";
-import { campaignIcon, formatCategory } from "../../src/campaigns/catalog";
+import { campaignIcon, formatCategory, groupCampaignsByBusiness, isCampaignLive } from "../../src/campaigns/catalog";
 import { colors, outfitFonts, radius } from "../../src/theme";
 
 export default function HomeScreen() {
@@ -32,6 +32,11 @@ export default function HomeScreen() {
     () => availableCampaigns.filter((campaign) => !joinedCampaignIds.includes(campaign._id)).slice(0, 3),
     [availableCampaigns, joinedCampaignIds],
   );
+  // Browsing a place isn't the same as joining one of its offers, so this isn't filtered by joinedCampaignIds.
+  const popularRestaurants = useMemo(
+    () => groupCampaignsByBusiness(availableCampaigns.filter(isCampaignLive)).slice(0, 3),
+    [availableCampaigns],
+  );
 
   const load = useCallback(async () => {
     if (isPreview) return;
@@ -53,13 +58,11 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
-      <FlatList
-        data={popularCampaigns}
-        keyExtractor={(item) => item._id}
+      <ScrollView
         contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.forest} />}
-        ListHeaderComponent={
-          <>
+      >
             <View style={styles.pageHeader}>
               <View>
                 <Text style={styles.welcome}>Welcome</Text>
@@ -129,21 +132,51 @@ export default function HomeScreen() {
               </View>
               <Text style={styles.count}>Join your next favourite</Text>
             </View>
-          </>
-        }
-        ListEmptyComponent={<View style={styles.noActive}><Text style={styles.noActiveText}>No new campaigns right now. Check back soon.</Text></View>}
-        renderItem={({ item }) => (
-          <TouchableOpacity style={styles.popularCampaign} activeOpacity={0.85} onPress={() => router.push(`/campaign/${item._id}`)}>
-            <IconCircle name={campaignIcon(item.businessId.category)} size={46} iconSize={21} />
-            <View style={styles.popularInfo}>
-              <Text style={styles.popularBusiness}>{item.businessId.name}</Text>
-              <Text style={styles.popularCategory}>{formatCategory(item.businessId.category)}</Text>
-              <Text style={styles.popularOffer}>{item.headline}</Text>
+            {popularCampaigns.length ? (
+              <View style={{ gap: 12 }}>
+                {popularCampaigns.map((item) => (
+                  <TouchableOpacity key={item._id} style={styles.popularCampaign} activeOpacity={0.85} onPress={() => router.push(`/campaign/${item._id}`)}>
+                    <IconCircle name={campaignIcon(item.businessId.category)} size={46} iconSize={21} />
+                    <View style={styles.popularInfo}>
+                      <Text style={styles.popularBusiness}>{item.businessId.name}</Text>
+                      <Text style={styles.popularCategory}>{formatCategory(item.businessId.category)}</Text>
+                      <Text style={styles.popularOffer}>{item.headline}</Text>
+                    </View>
+                    <View style={styles.stampGoal}><Text style={styles.stampGoalNumber}>{item.stampsRequired}</Text><Text style={styles.stampGoalLabel}>stamps</Text></View>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            ) : (
+              <View style={styles.noActive}><Text style={styles.noActiveText}>No new campaigns right now. Check back soon.</Text></View>
+            )}
+
+            <View style={styles.popularHeading}>
+              <View style={styles.popularHeadingRow}>
+                <Text style={styles.sectionTitle}>Popular restaurants</Text>
+                <TouchableOpacity accessibilityRole="button" accessibilityLabel="See all restaurants" onPress={() => router.push("/discover-restaurants")}><Text style={styles.seeAll}>See All</Text></TouchableOpacity>
+              </View>
+              <Text style={styles.count}>Browse by place</Text>
             </View>
-            <View style={styles.stampGoal}><Text style={styles.stampGoalNumber}>{item.stampsRequired}</Text><Text style={styles.stampGoalLabel}>stamps</Text></View>
-          </TouchableOpacity>
-        )}
-      />
+            {popularRestaurants.length ? (
+              <View style={{ gap: 12 }}>
+                {popularRestaurants.map((restaurant) => (
+                  <TouchableOpacity key={restaurant._id} style={styles.popularCampaign} activeOpacity={0.85} onPress={() => router.push(`/business/${restaurant._id}`)}>
+                    <IconCircle name={campaignIcon(restaurant.category)} size={46} iconSize={21} />
+                    <View style={styles.popularInfo}>
+                      <Text style={styles.popularBusiness}>{restaurant.name}</Text>
+                      <Text style={styles.popularCategory}>{formatCategory(restaurant.category)}</Text>
+                    </View>
+                    <View style={styles.stampGoal}>
+                      <Text style={styles.stampGoalNumber}>{restaurant.campaignCount}</Text>
+                      <Text style={styles.stampGoalLabel}>{restaurant.campaignCount === 1 ? "campaign" : "campaigns"}</Text>
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            ) : (
+              <View style={styles.noActive}><Text style={styles.noActiveText}>No restaurants right now. Check back soon.</Text></View>
+            )}
+      </ScrollView>
     </SafeAreaView>
   );
 }

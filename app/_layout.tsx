@@ -17,7 +17,7 @@ function RootNavigation({ splashFinished }: { splashFinished: boolean }) {
   const rootNavigationState = useRootNavigationState();
   const inAuthGroup = segments[0] === "(auth)";
   const inTabsGroup = segments[0] === "(tabs)";
-  const inProtectedDetail = ["discover-campaigns", "campaign", "card", "notifications", "stamp"].includes(segments[0] || "");
+  const inProtectedDetail = ["discover-campaigns", "discover-restaurants", "campaign", "card", "business", "notifications", "stamp"].includes(segments[0] || "");
   const { t: stampToken } = useGlobalSearchParams<{ t?: string }>();
   // A stamp QR opened while signed out is remembered and finished right after sign-in.
   const pendingStampToken = useRef<string | null>(null);
