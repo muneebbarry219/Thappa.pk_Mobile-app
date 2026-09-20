@@ -16,6 +16,8 @@ interface AuthContextValue {
   loading: boolean;
   isPreview: boolean;
   login: (user: CustomerUser, accessToken: string, refreshToken: string) => Promise<void>;
+  /** Merges profile fields (e.g. after editing) into the stored session, so they persist across app restarts. */
+  updateUser: (patch: Partial<CustomerUser>) => Promise<void>;
   /** Developer-only: logs into a fake local session with no network calls at all, so every screen can be reviewed with static mock data. See src/preview/mockData.ts. */
   previewLogin: () => void;
   logout: () => Promise<void>;
@@ -68,6 +70,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(PREVIEW_USER);
   }
 
+  async function updateUser(patch: Partial<CustomerUser>) {
+    setUser((current) => {
+      if (!current) return current;
+      const next = { ...current, ...patch };
+      if (!isPreview) void AsyncStorage.setItem(USER_KEY, JSON.stringify(next));
+      return next;
+    });
+  }
+
   async function logout() {
     if (!isPreview) {
       await clearTokens();
@@ -78,7 +89,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, isPreview, login, previewLogin, logout }}>{children}</AuthContext.Provider>
+    <AuthContext.Provider value={{ user, loading, isPreview, login, updateUser, previewLogin, logout }}>{children}</AuthContext.Provider>
   );
 }
 

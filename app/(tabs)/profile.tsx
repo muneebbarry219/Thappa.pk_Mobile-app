@@ -1,4 +1,5 @@
 import { View, TouchableOpacity, StyleSheet } from "react-native";
+import { useRouter } from "expo-router";
 import { Text } from "../../src/components/AppText";
 import { IconCircle } from "../../src/components/IconCircle";
 import { useAuth } from "../../src/auth/AuthContext";
@@ -7,12 +8,21 @@ import { useAlertPrompt } from "../../src/components/PromptProvider";
 
 export default function ProfileScreen() {
   const { user, logout } = useAuth();
+  const router = useRouter();
   const Alert = useAlertPrompt();
   const initial = user?.name?.charAt(0)?.toUpperCase() || "?";
 
   return (
     <View style={styles.container}>
       <View style={styles.hero}>
+        <TouchableOpacity
+          accessibilityRole="button"
+          accessibilityLabel="Edit profile"
+          style={styles.editButton}
+          onPress={() => router.push("/edit-profile")}
+        >
+          <IconCircle name="pencil" size={34} iconSize={15} backgroundColor={colors.yellow} iconColor={colors.forest} />
+        </TouchableOpacity>
         <View style={styles.avatar}><Text style={styles.avatarText}>{initial}</Text></View>
         <Text style={styles.name}>{user?.name || "Thappa member"}</Text>
         <Text style={styles.detail}>{user?.phone || user?.email || "Member"}</Text>
@@ -37,7 +47,8 @@ export default function ProfileScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.cream, padding: 16 },
-  hero: { backgroundColor: colors.forest, borderRadius: radius.large, alignItems: "center", paddingVertical: 28, paddingHorizontal: 20 },
+  hero: { backgroundColor: colors.forest, borderRadius: radius.large, alignItems: "center", paddingVertical: 28, paddingHorizontal: 20, position: "relative" },
+  editButton: { position: "absolute", top: 14, right: 14 },
   avatar: { width: 74, height: 74, borderRadius: 37, backgroundColor: colors.yellow, alignItems: "center", justifyContent: "center" },
   avatarText: { color: colors.ink, fontSize: 32, fontWeight: "900" },
   name: { color: colors.white, fontSize: 21, fontWeight: "900", marginTop: 12 },
